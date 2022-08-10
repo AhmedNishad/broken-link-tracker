@@ -1,0 +1,19 @@
+{
+  "name": "broken-link-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "pnpm --stream -r start",
+    "start:dev": "pnpm --stream -r run start:dev",
+    "build": "pnpm --stream -r run build",
+    "clean": "rm -rf .parcel-cache && pnpm -r run clean",
+    "be": "pnpm --filter backend",
+		"bea": "pnpm --filter backend add",
+		"fe": "pnpm --filter frontend",
+		"fea": "pnpm --filter frontend add"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
