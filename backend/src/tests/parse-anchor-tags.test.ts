@@ -1,7 +1,33 @@
-const sum = (a: number, b: number): number => {
-    return a + b;
+
+const findLinkTagCount = (html: string) : number => {
+  return 0;
 }
 
-test('adds 1 + 2 to equal 3', () => {
-  expect(sum(1, 2)).toBe(3);
+const testHTMLWithOneLink = `
+<html>
+  <head></head>
+  <body>
+    <a href="click.html">Click me</a>
+  </body>
+</html>
+`
+
+const testHTMLWithNoLinks = `
+<html>
+  <head></head>
+  <body>
+  </body>
+</html>
+`;
+
+test('finds 0 anchor tags in empty html document', () => {
+  expect(findLinkTagCount("")).toBe(0);
+});
+
+test('finds 0 anchor tags in html document', () => {
+  expect(findLinkTagCount(testHTMLWithNoLinks)).toBe(0);
+});
+
+test('finds 1 anchor tags in html document', () => {
+  expect(findLinkTagCount(testHTMLWithOneLink)).toBe(1);
 });
