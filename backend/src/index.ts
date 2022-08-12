@@ -1,24 +1,20 @@
 // Require the framework and instantiate it
 const fastify = require('fastify')({ logger: true })
 
-const parseSiteMap = require('./crawler/sitemap');
+const sitemap  = require('./crawler/sitemap');
+
+//import {parseSiteMap} from './crawler/sitemap';
 
 // crawl expects a URL that will be crawled
 fastify.get('/crawl', async (request: any, reply: any) => {
-
-    // begin a pupetteer instance
-
-    // find the relevant page 
-
-  return { hello: 'world' }
+  return await sitemap.crawlSitemap(request.query.url);
 })
 
 // crawl expects a URL that will be crawled
 fastify.get('/sitemap', async (request: any, reply: any) => {
   console.log(request.query.url);
- return await parseSiteMap("https://doctormobile.lk");
+  return await sitemap.parseSiteMap(request.query.url);
 
-return { hello: 'world' }
 })
 
 const start = async () => {
