@@ -2,6 +2,37 @@ const axios = require('axios');
 
 const linkLimit = 10;
 
+const puppeteer = require('puppeteer');
+
+const searchGoogle = async (searchQuery: string) : Promise<any[]> => {
+    /** by default puppeteer launch method have headless option true*/
+    const browser = await puppeteer.launch({
+    headless: false
+            });
+    const page = await browser.newPage();
+    await page.goto('https://www.google.com/');
+    await page.type('input[aria-label="Search"]', searchQuery);
+    await page.keyboard.press('Enter');
+    
+    /** waitfor while loding the page, otherwise evaulate method will get failed. */
+    await page.waitFor(5000);
+    const list = await page.evaluate(() => {
+        let data = []
+        /** this can be changed for other website.*/
+        const list: NodeListOf<any> = document.querySelectorAll('.rc .r');
+        for (const a of list) {
+            data.push({
+                'title': a.querySelector('.LC20lb').innerText.trim().replace(/(\r\n|\n|\r)/gm, " "),
+                'link': a.querySelector('a').href
+                    })
+        }
+        return data;
+    })
+    console.log(list);
+    await browser.close();
+    return list;
+    }
+
 const getSiteMapUrl = async (baseUrl: string) : Promise<string> => {
     
     let siteMap = "";
@@ -37,9 +68,12 @@ const getSiteMapUrl = async (baseUrl: string) : Promise<string> => {
     }
 
     // (3) if not try googling the sitemap - site:example.com inurl:sitemap filetype:xml
-    const puppeteer = require('puppeteer');
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+    let googleSearchTerm = `site:${new URL(baseUrl).host} inurl:sitemap filetype:xml`;
+    let googleResults = await searchGoogle(googleSearchTerm);
+
+    if(googleResults.length != 0){
+        siteMap = googleResults[0].link;
+    }
 
     console.log("Sitemap is at: " + siteMap);
     return siteMap;
@@ -75,7 +109,6 @@ const parseSiteMap = async (baseUrl: string) : Promise<any> => {
 
                 if(jObj.sitemapindex){
                     let sitemaps = jObj.sitemapindex.sitemap;
-                    // TODO - Recursively identify all links, make request and build up datastructure (D.F.S/ HM)
                     console.log("-------- site maps start --------------")
                     for(let i = 0; i < 5; i++){
                         console.log(sitemaps[i]);
@@ -128,7 +161,6 @@ const parseSiteMap = async (baseUrl: string) : Promise<any> => {
 }
 
 const crawlSitemap = async (baseUrl: string) : Promise<any> => {
-    const puppeteer = require('puppeteer');
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
@@ -222,6 +254,7 @@ module.exports = {
     crawlSitemap
 }
 
+export{}
 /* export {
     parseSiteMap,
 }; */
