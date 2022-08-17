@@ -1,42 +1,56 @@
 const axios = require('axios');
 
-const linkLimit = 10;
+const linkLimit = process.env.linkLimit || 10;
 
 const puppeteer = require('puppeteer');
 
 const searchGoogle = async (searchQuery: string) : Promise<any[]> => {
     /** by default puppeteer launch method have headless option true*/
     const browser = await puppeteer.launch({
-    headless: false
+    headless: true
             });
     const page = await browser.newPage();
-    await page.goto('https://www.google.com/');
+    await page.goto('https://www.google.lk/');
     await page.type('input[aria-label="Search"]', searchQuery);
     await page.keyboard.press('Enter');
     
+    let list: any[] = [];
     /** waitfor while loding the page, otherwise evaulate method will get failed. */
-    await page.waitFor(5000);
-    const list = await page.evaluate(() => {
-        let data = []
-        /** this can be changed for other website.*/
-        const list: NodeListOf<any> = document.querySelectorAll('.rc .r');
-        for (const a of list) {
-            data.push({
-                'title': a.querySelector('.LC20lb').innerText.trim().replace(/(\r\n|\n|\r)/gm, " "),
-                'link': a.querySelector('a').href
-                    })
-        }
-        return data;
-    })
+    try{
+        await page.waitForSelector('.g', {
+            visible: true,
+            timeout: 5000
+          });
+         // const googleHandle = await page.$$('.g');
+          const searchHandle = await page.$('#search');
+            list = await page.evaluate(() => {
+            let data = []
+           const list: NodeListOf<any> = document.querySelectorAll('.g');
+            for (const a of list) {
+                console.log(a);
+                data.push({
+                    'title': a.querySelector('h3').innerText.trim().replace(/(\r\n|\n|\r)/gm, " "),
+                    'link': a.querySelector('a').href
+                        })
+            }
+            return data;
+        })
+
+    }catch(e){
+        console.log(e);
+    }
     console.log(list);
     await browser.close();
     return list;
-    }
+}
 
 const getSiteMapUrl = async (baseUrl: string) : Promise<string> => {
-    
     let siteMap = "";
     
+    if(baseUrl.endsWith("/")){
+        baseUrl = baseUrl.slice(0, baseUrl.length - 1)
+    }
+
     // (1) if robots txt has sitemap link, use that
     // otherwise try a number of different sitemap URLs
     let robotsRes = await axios.get(`${baseUrl}/robots.txt`);
@@ -66,11 +80,11 @@ const getSiteMapUrl = async (baseUrl: string) : Promise<string> => {
             return sm;
         }
     }
-
+    
     // (3) if not try googling the sitemap - site:example.com inurl:sitemap filetype:xml
-    let googleSearchTerm = `site:${new URL(baseUrl).host} inurl:sitemap filetype:xml`;
+    let googleSearchTerm = `site:${new URL(baseUrl).host} inurl:sitemap`;
     let googleResults = await searchGoogle(googleSearchTerm);
-
+    console.log(googleResults);
     if(googleResults.length != 0){
         siteMap = googleResults[0].link;
     }
@@ -100,12 +114,11 @@ const parseSiteMap = async (baseUrl: string) : Promise<any> => {
 
             // get the sitemap URL
             let sitemapRes = await axios.get(siteMapURL);
-            if(sitemapRes.headers['content-type'] == 'text/xml'){
+            if(sitemapRes.headers['content-type'].includes('application/xml')){
                 // parse this xml
                 const { XMLParser} = require("fast-xml-parser");
                 const parser = new XMLParser();
                 let jObj = parser.parse(sitemapRes.data);
-                console.log(jObj);
 
                 if(jObj.sitemapindex){
                     let sitemaps = jObj.sitemapindex.sitemap;
@@ -141,8 +154,22 @@ const parseSiteMap = async (baseUrl: string) : Promise<any> => {
                         linkCount++;
                     }
                 }
-            }else{
-
+            }else if(sitemapRes.headers['content-type'].includes('text/plain')){
+                let urls = sitemapRes.data.split('\r\n');
+                for(let i = 0; i < urls.length; i++){
+                    let urlLocation = urls[i];
+                    console.log("checking URL " + urlLocation);
+                    if(linkCount > linkLimit){
+                        return;
+                    }
+                    try{
+                        let urlRes = await axios.get(urlLocation);
+                        hm[urlLocation] = urlRes.status;
+                    }catch(error:any){
+                        hm[urlLocation] = error.response.status;
+                    }
+                    linkCount++;
+                }
             }
         }
 
@@ -173,9 +200,11 @@ const crawlSitemap = async (baseUrl: string) : Promise<any> => {
             
         let siteMap = await getSiteMapUrl(baseUrl);
 
-        let linkCount = 0;
-        const linkLimit = 10;
+        if(siteMap == ""){
+            return {error: "Unable to find sitemap URL"};
+        }
 
+        let linkCount = 0;
         const parseSiteMaps =  async (siteMapURL: string) => {
             console.log("parsing sitemap " + siteMapURL);
             if(linkCount > linkLimit){
@@ -185,15 +214,12 @@ const crawlSitemap = async (baseUrl: string) : Promise<any> => {
 
             // get the sitemap xml
             let sitemapRes = await axios.get(siteMapURL);
-
             // if the url ends with XML, handle with this
-            if(sitemapRes.headers['content-type'] == 'text/xml'){
-
+            if(sitemapRes.headers['content-type'].includes('application/xml')){
                 // parse this xml
                 const { XMLParser} = require("fast-xml-parser");
                 const parser = new XMLParser();
                 let jObj = parser.parse(sitemapRes.data);
-                console.log(jObj);
                 
                 if(jObj.sitemapindex){
                     let sitemaps = jObj.sitemapindex.sitemap;
@@ -229,10 +255,25 @@ const crawlSitemap = async (baseUrl: string) : Promise<any> => {
                         linkCount++;
                     }
                 }
+            }else if(sitemapRes.headers['content-type'].includes('text/plain')){
+                let urls = sitemapRes.data.split('\r\n');
+                for(let i = 0; i < urls.length; i++){
+                    let urlLocation = urls[i];
+                    console.log("checking URL " + urlLocation);
+                    if(linkCount > linkLimit){
+                        return;
+                    }
+                    try{
+                        let urlRes = await page.goto(urlLocation, {});
+                        hm[urlLocation] = urlRes.status();
+                    }catch(error:any){
+                        hm[urlLocation] = error.response.status;
+                    }
+                    linkCount++;
+                }
             }
         }
         await parseSiteMaps(siteMap);
-
            
         console.log(hm);
         return hm;
@@ -255,7 +296,3 @@ module.exports = {
 }
 
 export{}
-/* export {
-    parseSiteMap,
-}; */
-// find the relevant 

@@ -10,9 +10,8 @@ fastify.get('/crawl', async (request: any, reply: any) => {
   return await crawlSitemap(request.query.url);
 })
 
-// crawl expects a URL that will be crawled
+// crawl expects a URL that will be analuzed through the sitemap
 fastify.get('/sitemap', async (request: any, reply: any) => {
-  console.log(request.query.url);
   return await parseSiteMap(request.query.url);
 
 })
