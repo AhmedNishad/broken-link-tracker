@@ -18,7 +18,6 @@ var MAX_PROCESS_COUNT = process.env.MAX_PROCESS_COUNT || 2;
 // crawl expects a URL that will be analuzed through the sitemap
 fastify.get('/crawl', async (request: any, reply: any) => {
   // check if there are already  MAX_PROCESS_COUNT messages
-
   let currentQueueCount = await AnalysisRequestModel.countDocuments({ handled:false });
   if(currentQueueCount > MAX_PROCESS_COUNT){
     return {error: "Server overloaded, please try again later"}
@@ -56,6 +55,10 @@ fastify.get('/results', async (request: any, reply: any) => {
   if(analysisRequests.length > 0){
     let analysisRequest = analysisRequests[0];
     if(analysisRequest.handled && analysisRequest.results){
+      let {completedTimeStamp, insertedTimeStamp} = analysisRequest;
+      let timeToComplete = completedTimeStamp.getTime() - insertedTimeStamp.getTime();
+      console.log(timeToComplete);
+      analysisRequest.timeToComplete = timeToComplete;
       return analysisRequest;
     }else{
       return {message: "Message is still being handled"}
@@ -66,7 +69,6 @@ fastify.get('/results', async (request: any, reply: any) => {
 
 // listens for queue events
 queueConsumer().then(() => {
-  
 })
 
 // spins up fastify server

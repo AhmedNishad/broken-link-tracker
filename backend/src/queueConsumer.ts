@@ -24,6 +24,7 @@ export interface QueueMessage{
 
 async function handleMessage(msg: QueueMessage){
     let results = {};
+    let linkCount = 0;
     if(msg.type == 'page'){
         let crawler = new Crawler(msg.baseUrl, msg.requestId);
         await crawler.getSitemap();
@@ -33,6 +34,7 @@ async function handleMessage(msg: QueueMessage){
         await crawler.getSitemap();
         await crawler.crawl();
         results = crawler.results;
+        linkCount = crawler.linkCount;
     }
 
     // create PDF document with the snapshots of error pages
@@ -45,9 +47,9 @@ async function handleMessage(msg: QueueMessage){
         model.handled = true;
         model.results = JSON.stringify(results);
         model.completedTimeStamp = new Date();
+        model.linkCount = linkCount;
         await model.save();
     }
-
 }
 
 async function do_consume() {
@@ -69,7 +71,6 @@ async function do_consume() {
         console.error(e);
     }   
 }
-
 
 module.exports = do_consume;
 

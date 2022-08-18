@@ -16,7 +16,9 @@ const analysisRequestSchema = new mongoose.Schema({
     completedTimeStamp: Date,
     handled: Boolean,
     type: String,
-    error: String
+    error: String,
+    timeToComplete: Number,
+    linkCount: Number
 });
 
 const AnalysisRequest = mongoose.model('AnalysisRequest', analysisRequestSchema);

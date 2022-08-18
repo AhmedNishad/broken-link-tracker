@@ -4,14 +4,14 @@ const { XMLParser} = require("fast-xml-parser");
 
 const { searchGoogle } = require('./sitemap');
 
-const linkLimit = process.env.linkLimit || 20;
+const linkLimit = process.env.linkLimit || 5;
 
 export class Crawler{
     baseUrl: string;
     requestId: string; 
     siteMapUrl: string;
     type: string;
-
+    linkCount: number;
     results: any;
 
     constructor(baseUrl: string, requestId: string, type: string = "http"){
@@ -20,6 +20,11 @@ export class Crawler{
         this.siteMapUrl = "";
         this.results = {};
         this.type = type;
+        this.linkCount = 0;
+    }
+
+    setSitemap(sitemap: string){
+        this.siteMapUrl = sitemap;
     }
 
     async getSitemap(){
@@ -82,9 +87,9 @@ export class Crawler{
                 throw 'Unable to find sitemap URL';
             }
 
-            let linkCount = 0;
+            //let linkCount = 0;
             const parseSiteMaps =  async (siteMapURL: string) => {
-                if(linkCount > linkLimit){
+                if(this.linkCount > linkLimit){
                     return;
                 }
 
@@ -118,31 +123,54 @@ export class Crawler{
                         
                         for(let i = 0; i < urlSets.length; i++){
                             let urlLocation = urlSets[i].loc;
-                            console.log("checking URL " + urlLocation);
-                            if(linkCount > linkLimit){
+
+                            console.log(this.linkCount + ") checking URL " + urlLocation);
+                            if(this.linkCount > linkLimit){
                                 return;
                             }
-                            try{
-                                let urlRes = await page.goto(urlLocation, {});
-                                this.results[urlLocation] = urlRes.status();
-                            }catch(error:any){
-                                this.results[urlLocation] = error.response.status;
+                            if(this.type == "browser"){
+                                try{
+                                    let urlRes = await page.goto(urlLocation, {});
+                                    this.results[urlLocation] = urlRes.status();
+                                }catch(error:any){
+                                    this.results[urlLocation] = error.response.status;
+                                }
+                            }else if(this.type == "http"){
+                                try{
+                                    let urlRes = await axios.get(urlLocation);
+                                    this.results[urlLocation] = urlRes.status;
+                                    if(this.linkCount == 2){
+                                        console.log("Saving SS");
+                                        await page.goto(urlLocation, {
+                                            waitUntil: 'networkidle2'
+                                        });
+                                        await page.waitForTimeout(500);
+                                        await page.screenshot({ path: `images/${this.linkCount}.png`, fullPage: true });
+                                    }
+                                }catch(error:any){
+                                    if(error.response){
+                                        this.results[urlLocation] = error.response.status;
+                                    }else{
+                                        console.error(error);
+                                    }
+                                }
                             }
-                            linkCount++;
+                            this.linkCount++;
                         }
                     }
                 }else if(sitemapRes.headers['content-type'].includes('text/plain')){
                     let urls = sitemapRes.data.split('\r\n');
                     for(let i = 0; i < urls.length; i++){
                         let urlLocation = urls[i];
-                        console.log("checking URL " + urlLocation);
-                        if(linkCount > linkLimit){
+                        console.log(this.linkCount + ")checking URL " + urlLocation);
+                        if(this.linkCount > linkLimit){
                             return;
                         }
                         if(this.type == "browser"){
                             try{
                                 let urlRes = await page.goto(urlLocation, {});
                                 this.results[urlLocation] = urlRes.status();
+                                
                             }catch(error:any){
                                 this.results[urlLocation] = error.response.status;
                             }
@@ -155,7 +183,7 @@ export class Crawler{
                             }
                         }
                         
-                        linkCount++;
+                        this.linkCount++;
                     }
                 }
             }

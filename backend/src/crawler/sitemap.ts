@@ -189,6 +189,17 @@ const parseSiteMap = async (baseUrl: string) : Promise<any> => {
     
 }
 
+let endpoints = [
+    'https://api.github.com/users/ejirocodes',
+    'https://api.github.com/users/ejirocodes/repos',
+    'https://api.github.com/users/ejirocodes/followers',
+    'https://api.github.com/users/ejirocodes/following'
+  ];
+  
+axios.all(endpoints.map((endpoint) => axios.get(endpoint))).then(
+(data: any) => console.log(data.status),
+);
+
 const crawlSitemap = async (baseUrl: string) : Promise<any> => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
