@@ -116,7 +116,7 @@ const parseSiteMap = async (baseUrl: string) : Promise<any> => {
 
             // get the sitemap URL
             let sitemapRes = await axios.get(siteMapURL);
-            if(sitemapRes.headers['content-type'].includes('application/xml')){
+            if(sitemapRes.headers['content-type'].includes('xml')){
                 // parse this xml
                 const { XMLParser} = require("fast-xml-parser");
                 const parser = new XMLParser();
@@ -217,7 +217,7 @@ const crawlSitemap = async (baseUrl: string) : Promise<any> => {
             // get the sitemap xml
             let sitemapRes = await axios.get(siteMapURL);
             // if the url ends with XML, handle with this
-            if(sitemapRes.headers['content-type'].includes('application/xml')){
+            if(sitemapRes.headers['content-type'].includes('xml')){
                 // parse this xml
                 const { XMLParser} = require("fast-xml-parser");
                 const parser = new XMLParser();

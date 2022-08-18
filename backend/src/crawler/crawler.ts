@@ -4,7 +4,7 @@ const { XMLParser} = require("fast-xml-parser");
 
 const { searchGoogle } = require('./sitemap');
 
-const linkLimit = process.env.linkLimit || 10;
+const linkLimit = process.env.linkLimit || 5;
 
 export class Crawler{
     baseUrl: string;
@@ -17,8 +17,6 @@ export class Crawler{
         this.baseUrl = baseUrl;
         this.requestId = requestId;
         this.siteMapUrl = "";
-        this.getSitemap();
-        console.log("Sitemap is at: " + this.siteMapUrl);
         this.results = {};
     }
 
@@ -75,10 +73,8 @@ export class Crawler{
     async crawl(){
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
-
+        console.log("Crawling page at " +  this.siteMapUrl);
         try{
-            let hm: any = {};
-
             if(this.siteMapUrl == ""){
                 this.results = {error: "Unable to find sitemap URL"};
                 throw 'Unable to find sitemap URL';
@@ -86,15 +82,15 @@ export class Crawler{
 
             let linkCount = 0;
             const parseSiteMaps =  async (siteMapURL: string) => {
-                console.log("parsing sitemap " + siteMapURL);
                 if(linkCount > linkLimit){
                     return;
                 }
 
                 // get the sitemap xml
                 let sitemapRes = await axios.get(siteMapURL);
+                console.log(sitemapRes.headers['content-type']);
                 // if the url ends with XML, handle with this
-                if(sitemapRes.headers['content-type'].includes('application/xml')){
+                if(sitemapRes.headers['content-type'].includes('xml')){
                     // parse this xml
                     const parser = new XMLParser();
                     let jObj = parser.parse(sitemapRes.data);
@@ -126,9 +122,9 @@ export class Crawler{
                             }
                             try{
                                 let urlRes = await page.goto(urlLocation, {});
-                                hm[urlLocation] = urlRes.status();
+                                this.results[urlLocation] = urlRes.status();
                             }catch(error:any){
-                                hm[urlLocation] = error.response.status;
+                                this.results[urlLocation] = error.response.status;
                             }
                             linkCount++;
                         }
@@ -153,6 +149,7 @@ export class Crawler{
             }
             await parseSiteMaps(this.siteMapUrl);
         }catch(e: any){
+            console.error(e);
             if(e.response){
                 console.log(e.response.status)
             }else{
@@ -164,3 +161,7 @@ export class Crawler{
         }
     }
 }
+
+module.exports = Crawler;
+
+export {}

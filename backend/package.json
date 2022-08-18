@@ -8,6 +8,8 @@
     "build": "tsc --incremental",
     "start": "node server.js",
     "start:dev": "nodemon",
+    "dev": "nodemon",
+    "start:queue": "nodemon",
     "test": "jest"
   },
   "keywords": [],
@@ -25,6 +27,7 @@
   "dependencies": {
     "@types/puppeteer": "^5.4.6",
     "@types/puppeteer-core": "^5.4.0",
+    "amqplib": "^0.10.2",
     "axios": "^0.27.2",
     "fast-xml-parser": "^4.0.9",
     "fastify": "^4.4.0",

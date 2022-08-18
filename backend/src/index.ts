@@ -1,16 +1,15 @@
-import { analysisRepository } from "./models/analysis-request";
 
 // Require the framework and instantiate it
 const fastify = require('fastify')({ logger: true })
 
 const {crawlSitemap, parseSiteMap}  = require('./crawler/sitemap');
 
-//const redisClient = require('../src/redis-client');
-const redisClient = require('../src/redis');
-
 const redis = require('redis');
 const client = redis.createClient();
-//import {parseSiteMap} from './crawler/sitemap';
+
+
+const publishToQueue = require('./queuePublisher');
+const queueConsumer = require('./queueConsumer');
 
 // crawl expects a URL that will be crawled
 fastify.get('/crawl', async (request: any, reply: any) => {
@@ -25,28 +24,31 @@ fastify.get('/sitemap', async (request: any, reply: any) => {
   let analysisRequest: any = {
     requestId: requestId.getTime(),
     email,
-    baseUrl: url
+    baseUrl: url,
+    type: "http" // browser is also available
   };
   console.log(analysisRequest);
-  await client.connect();
-  await client.set(requestId.getTime().toString(), JSON.stringify(analysisRequest));
-  //await (await analysisRepository()).createAndSave(analysisRequest)
+  //await client.connect();
+  
+  // save request in Redis
+  //await client.set(requestId.getTime().toString(), JSON.stringify(analysisRequest));
 
-  // save request in Redis - TODO - Learn
-
-  return {};
-
+  // save request to Mongo - TODO
 
   // send to RabbitMQ? - TODO - Learn
 
-  // read from consumers - TODO - Learn
+  await publishToQueue(JSON.stringify(analysisRequest));
 
-  // take snaps and create PDF - TODO
+  return {requestId: requestId.getTime()};
 
-  // send email to client - TODO
+  
 
   return await parseSiteMap(request.query.url);
 
+})
+
+queueConsumer().then(() => {
+  
 })
 
 const start = async () => {
