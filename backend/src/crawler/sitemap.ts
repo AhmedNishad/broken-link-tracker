@@ -93,6 +93,8 @@ const getSiteMapUrl = async (baseUrl: string) : Promise<string> => {
     return siteMap;
 }
 
+// TODO - Rewrite to be OOP (Reduce duplication)
+// TODO - Use more TS features - LEARN
 const parseSiteMap = async (baseUrl: string) : Promise<any> => {
     try{
         let hm: any = {};
@@ -292,7 +294,8 @@ const crawlSitemap = async (baseUrl: string) : Promise<any> => {
 
 module.exports = {
     parseSiteMap,
-    crawlSitemap
+    crawlSitemap,
+    searchGoogle
 }
 
 export{}
