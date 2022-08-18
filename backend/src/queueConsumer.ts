@@ -42,11 +42,10 @@ async function do_consume() {
         var ch = await conn.createChannel()
         var q = 'br_queue';
         await ch.assertQueue(q);
+        ch.prefetch(1);
         ch.consume(q, async function (msg: any) {
-            console.log("Message received");
-            console.log(msg.content.toString());
             let obj = JSON.parse(msg.content.toString());
-            console.log(obj);
+            console.log("Message received " + obj.requestId);
             await handleMessage(obj);
             await ch.ack(msg);
             console.log("Acknowledged Message " + obj.requestId)
@@ -56,9 +55,6 @@ async function do_consume() {
     }   
 }
 
-/* do_consume().then(() => {
-    console.log("Listening for messages");
-}); */
 
 module.exports = do_consume;
 

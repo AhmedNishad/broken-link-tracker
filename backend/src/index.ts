@@ -7,9 +7,10 @@ const {crawlSitemap, parseSiteMap}  = require('./crawler/sitemap');
 const redis = require('redis');
 const client = redis.createClient();
 
-
 const publishToQueue = require('./queuePublisher');
 const queueConsumer = require('./queueConsumer');
+
+const {AnalysisRequestModel} = require("./db");
 
 // crawl expects a URL that will be crawled
 fastify.get('/crawl', async (request: any, reply: any) => {
@@ -18,33 +19,36 @@ fastify.get('/crawl', async (request: any, reply: any) => {
 
 // crawl expects a URL that will be analuzed through the sitemap
 fastify.get('/sitemap', async (request: any, reply: any) => {
-  let requestId = new Date(); // make timestamp
+
+  // check if 
+
+  let requestId = (new Date()).getTime(); // make timestamp
   let {email, url} = request.query;
 
-  let analysisRequest: any = {
-    requestId: requestId.getTime(),
+  /* let analysisRequest: any = {
+    requestId: requestId,
     email,
     baseUrl: url,
     type: "http" // browser is also available
-  };
-  console.log(analysisRequest);
-  //await client.connect();
+  }; */
   
-  // save request in Redis
-  //await client.set(requestId.getTime().toString(), JSON.stringify(analysisRequest));
+  // save request to Mongo
+  let analysisRequest = new AnalysisRequestModel({
+    requestId: requestId,
+    email,
+    baseUrl: url,
+    type: "http", // browser is also available
+    insertedTimeStamp: new Date(),
+    handled: false,
+  });
+  await analysisRequest.save();
+  console.log(analysisRequest);
 
-  // save request to Mongo - TODO
-
-  // send to RabbitMQ? - TODO - Learn
+  // send to RabbitMQ?
 
   await publishToQueue(JSON.stringify(analysisRequest));
 
-  return {requestId: requestId.getTime()};
-
-  
-
-  return await parseSiteMap(request.query.url);
-
+  return {requestId: requestId};
 })
 
 queueConsumer().then(() => {

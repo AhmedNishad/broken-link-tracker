@@ -10,10 +10,6 @@ async function produce(message: string){
         var q = 'br_queue';
         await ch.assertQueue(q);
         ch.sendToQueue(q, Buffer.from(message));
-       /*  setTimeout( function()  {
-            ch.close();
-            conn.close();
-        },  500 ); */
     }catch(e){
         console.error(e);
     }
