@@ -13,8 +13,10 @@ const analysisRequestSchema = new mongoose.Schema({
     siteMapUrl: String,
     results: String,
     insertedTimeStamp: Date,
+    completedTimeStamp: Date,
     handled: Boolean,
-    type: String
+    type: String,
+    error: String
 });
 
 const AnalysisRequest = mongoose.model('AnalysisRequest', analysisRequestSchema);

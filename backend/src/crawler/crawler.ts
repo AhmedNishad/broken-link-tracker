@@ -4,20 +4,22 @@ const { XMLParser} = require("fast-xml-parser");
 
 const { searchGoogle } = require('./sitemap');
 
-const linkLimit = process.env.linkLimit || 5;
+const linkLimit = process.env.linkLimit || 20;
 
 export class Crawler{
     baseUrl: string;
     requestId: string; 
     siteMapUrl: string;
+    type: string;
 
     results: any;
 
-    constructor(baseUrl: string, requestId: string){
+    constructor(baseUrl: string, requestId: string, type: string = "http"){
         this.baseUrl = baseUrl;
         this.requestId = requestId;
         this.siteMapUrl = "";
         this.results = {};
+        this.type = type;
     }
 
     async getSitemap(){
@@ -137,12 +139,22 @@ export class Crawler{
                         if(linkCount > linkLimit){
                             return;
                         }
-                        try{
-                            let urlRes = await page.goto(urlLocation, {});
-                            this.results[urlLocation] = urlRes.status();
-                        }catch(error:any){
-                            this.results[urlLocation] = error.response.status;
+                        if(this.type == "browser"){
+                            try{
+                                let urlRes = await page.goto(urlLocation, {});
+                                this.results[urlLocation] = urlRes.status();
+                            }catch(error:any){
+                                this.results[urlLocation] = error.response.status;
+                            }
+                        }else if(this.type == "http"){
+                            try{
+                                let urlRes = await axios.get(urlLocation);
+                                this.results[urlLocation] = urlRes.status;
+                            }catch(error:any){
+                                this.results[urlLocation] = error.response.status;
+                            }
                         }
+                        
                         linkCount++;
                     }
                 }

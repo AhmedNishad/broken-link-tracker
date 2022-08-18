@@ -14,47 +14,62 @@ const {AnalysisRequestModel} = require("./db");
 
 var MAX_PROCESS_COUNT = process.env.MAX_PROCESS_COUNT || 2;
 
-// crawl expects a URL that will be crawled
-fastify.get('/crawl', async (request: any, reply: any) => {
-  return await crawlSitemap(request.query.url);
-})
 
 // crawl expects a URL that will be analuzed through the sitemap
-fastify.get('/sitemap', async (request: any, reply: any) => {
+fastify.get('/crawl', async (request: any, reply: any) => {
+  // check if there are already  MAX_PROCESS_COUNT messages
 
-  // check if 
+  let currentQueueCount = await AnalysisRequestModel.countDocuments({ handled:false });
+  if(currentQueueCount > MAX_PROCESS_COUNT){
+    return {error: "Server overloaded, please try again later"}
+  }
 
   let requestId = (new Date()).getTime(); // make timestamp
-  let {email, url} = request.query;
+  let {email, url, type} = request.query;
 
-  /* let analysisRequest: any = {
-    requestId: requestId,
-    email,
-    baseUrl: url,
-    type: "http" // browser is also available
-  }; */
+  // default the type to http
+  if(!type){
+    type = "http"
+  }
   
   // save request to Mongo
   let analysisRequest = new AnalysisRequestModel({
     requestId: requestId,
     email,
     baseUrl: url,
-    type: "http", // browser is also available
+    type, // browser is also available
     insertedTimeStamp: new Date(),
     handled: false,
   });
   await analysisRequest.save();
 
-  // send to RabbitMQ?
+  // send to RabbitMQ
   await publishToQueue(JSON.stringify(analysisRequest));
 
   return {requestId: requestId};
 })
 
+fastify.get('/results', async (request: any, reply: any) => {
+  let {id} = request.query;
+  let analysisRequests = await AnalysisRequestModel.find({requestId: id});
+  console.log(analysisRequests);
+  if(analysisRequests.length > 0){
+    let analysisRequest = analysisRequests[0];
+    if(analysisRequest.handled && analysisRequest.results){
+      return analysisRequest;
+    }else{
+      return {message: "Message is still being handled"}
+    }
+  }
+  return await crawlSitemap(request.query.url);
+})
+
+// listens for queue events
 queueConsumer().then(() => {
   
 })
 
+// spins up fastify server
 const start = async () => {
   try {
     await fastify.listen({ port: 3000 })

@@ -1,10 +1,3 @@
-// responsible for
-
-// read from consumers - TODO - Learn
-
-// take snaps and create PDF - TODO
-
-// send email to client - TODO
 
 const amqplib = require('amqplib');
 
@@ -22,8 +15,10 @@ export interface QueueMessage{
     siteMapUrl: string;
     results: string;
     insertedTimeStamp: Date;
+    completedTimeStamp: Date;
     handled: boolean;
     type: string;
+    error: string;
     _id: string;
 }
 
@@ -40,11 +35,16 @@ async function handleMessage(msg: QueueMessage){
         results = crawler.results;
     }
 
+    // create PDF document with the snapshots of error pages
+
+    // mail the PDF documents
+
     console.log(msg._id);
     let model = await AnalysisRequestModel.findById(msg._id);
     if(model){
         model.handled = true;
         model.results = JSON.stringify(results);
+        model.completedTimeStamp = new Date();
         await model.save();
     }
 
