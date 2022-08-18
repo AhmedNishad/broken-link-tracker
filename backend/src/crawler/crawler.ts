@@ -149,11 +149,10 @@ export class Crawler{
             }
             await parseSiteMaps(this.siteMapUrl);
         }catch(e: any){
-            console.error(e);
             if(e.response){
-                console.log(e.response.status)
+                console.error(e.response.status)
             }else{
-                console.log(e);
+                console.error(e);
             }
             this.results = {error: "Error occurred while crawling " + this.baseUrl}
         }finally{

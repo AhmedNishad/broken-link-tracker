@@ -12,27 +12,42 @@ var amqp_url = process.env.CLOUDAMQP_URL || 'amqp://localhost:5672';
 
 const Crawler = require('./crawler/crawler');
 
+const {AnalysisRequestModel} = require("./db");
+
+// todo - remove interface duplication
 export interface QueueMessage{
-    requestId: string;
     email: string;
+    requestId: string;
     baseUrl: string;
+    siteMapUrl: string;
+    results: string;
+    insertedTimeStamp: Date;
+    handled: boolean;
     type: string;
+    _id: string;
 }
 
 async function handleMessage(msg: QueueMessage){
+    let results = {};
     if(msg.type == 'page'){
         let crawler = new Crawler(msg.baseUrl, msg.requestId);
         await crawler.getSitemap();
-        console.log(crawler.siteMapUrl);
         await crawler.crawl();
-        console.log(crawler.results);
     }else if(msg.type == 'http'){
         let crawler = new Crawler(msg.baseUrl, msg.requestId);
         await crawler.getSitemap();
-        console.log(crawler.siteMapUrl);
         await crawler.crawl();
-        console.log(crawler.results);
+        results = crawler.results;
     }
+
+    console.log(msg._id);
+    let model = await AnalysisRequestModel.findById(msg._id);
+    if(model){
+        model.handled = true;
+        model.results = JSON.stringify(results);
+        await model.save();
+    }
+
 }
 
 async function do_consume() {

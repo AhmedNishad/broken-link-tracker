@@ -3,7 +3,6 @@ const amqplib = require('amqplib');
 var amqp_url = process.env.CLOUDAMQP_URL || 'amqp://localhost:5672';
 
 async function produce(message: string){
-    console.log("Publishing");
     try{
         var conn = await amqplib.connect(amqp_url, "heartbeat=60");
         var ch = await conn.createChannel()

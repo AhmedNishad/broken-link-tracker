@@ -12,6 +12,8 @@ const queueConsumer = require('./queueConsumer');
 
 const {AnalysisRequestModel} = require("./db");
 
+var MAX_PROCESS_COUNT = process.env.MAX_PROCESS_COUNT || 2;
+
 // crawl expects a URL that will be crawled
 fastify.get('/crawl', async (request: any, reply: any) => {
   return await crawlSitemap(request.query.url);
@@ -42,10 +44,8 @@ fastify.get('/sitemap', async (request: any, reply: any) => {
     handled: false,
   });
   await analysisRequest.save();
-  console.log(analysisRequest);
 
   // send to RabbitMQ?
-
   await publishToQueue(JSON.stringify(analysisRequest));
 
   return {requestId: requestId};
