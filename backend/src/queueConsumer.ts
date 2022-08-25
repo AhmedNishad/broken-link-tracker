@@ -41,11 +41,8 @@ async function handleMessage(msg: QueueMessage){
         siteResults = crawler.crawlResults;
     }
 
-    // create PDF document with the snapshots of error pages
+    // mail the report
 
-    // mail the PDF documents
-
-    console.log(msg._id);
     let model = await AnalysisRequestModel.findById(msg._id);
     if(model){
         model.handled = true;

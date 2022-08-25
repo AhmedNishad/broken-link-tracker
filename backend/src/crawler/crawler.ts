@@ -4,7 +4,7 @@ const { XMLParser} = require("fast-xml-parser");
 
 const { searchGoogle } = require('./sitemap');
 const fs = require('fs');
-const linkLimit = parseInt(process.env.linkLimit || "") || 10;
+const linkLimit = parseInt(process.env.linkLimit || "") || 5;
 
 export interface SiteResult{
     statusCode: string;
@@ -100,6 +100,19 @@ export class Crawler{
     }
 
     async crawl(){
+        const instance = axios.create() 
+        instance.interceptors.request.use((config: any) => {
+          config.headers['request-startTime'] = new Date().getTime();
+          return config
+        })
+        
+        instance.interceptors.response.use((response: any) => {
+          const currentTime = new Date().getTime()      
+          const startTime = response.config.headers['request-startTime']      
+          response.headers['request-duration'] = currentTime - startTime      
+          return response
+        })
+
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
         console.log("Crawling page at " +  this.siteMapUrl);
@@ -182,7 +195,6 @@ export class Crawler{
                                         await page.goto(urlLocation, {
                                             waitUntil: 'networkidle2'
                                         });
-                                      //  await page.waitForTimeout(500);
                                         await page.screenshot({ path: ssPath , fullPage: true });
                                         this.addToResult(error.response.status, {
                                             link: urlLocation,
@@ -195,12 +207,12 @@ export class Crawler{
                                 }
                             }else if(this.type == "http"){
                                 try{
-                                    let urlRes = await axios.get(urlLocation);
+                                    let urlRes = await instance.get(urlLocation);
                                     this.results[urlLocation] = urlRes.status;
                                     this.addToResult(urlRes.status, {
                                         link: urlLocation,
                                         snapshotLocation: null,
-                                        pageLoadTime: 0
+                                        pageLoadTime: urlRes.headers['request-duration']
                                     });
                                     
                                 }catch(error:any){
@@ -215,7 +227,6 @@ export class Crawler{
                                         await page.goto(urlLocation, {
                                             waitUntil: 'networkidle2'
                                         });
-                                       // await page.waitForTimeout(500);
                                         await page.screenshot({ path: ssPath , fullPage: true });
                                         this.addToResult(error.response.status, {
                                             link: urlLocation,
