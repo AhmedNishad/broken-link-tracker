@@ -3,9 +3,19 @@ const puppeteer = require('puppeteer');
 const { XMLParser} = require("fast-xml-parser");
 
 const { searchGoogle } = require('./sitemap');
+const fs = require('fs');
+const linkLimit = parseInt(process.env.linkLimit || "") || 10;
 
-const linkLimit = process.env.linkLimit || 5;
+export interface SiteResult{
+    statusCode: string;
+    links: LinkResult[];
+}
 
+export interface LinkResult{
+    link: string;
+    snapshotLocation: string | null;
+    pageLoadTime: number | null;
+}
 export class Crawler{
     baseUrl: string;
     requestId: string; 
@@ -14,6 +24,8 @@ export class Crawler{
     linkCount: number;
     results: any;
 
+    crawlResults: SiteResult[];
+
     constructor(baseUrl: string, requestId: string, type: string = "http"){
         this.baseUrl = baseUrl;
         this.requestId = requestId;
@@ -21,10 +33,20 @@ export class Crawler{
         this.results = {};
         this.type = type;
         this.linkCount = 0;
+        this.crawlResults = [];
     }
 
     setSitemap(sitemap: string){
         this.siteMapUrl = sitemap;
+    }
+
+    private addToResult(statusCode: string, result: LinkResult){
+        let i = this.crawlResults.findIndex(c => c.statusCode == statusCode);
+        if(i == -1){
+            this.crawlResults.push({ statusCode, links: [result] });
+        }else{
+            this.crawlResults[i].links.push(result);
+        }
     }
 
     async getSitemap(){
@@ -121,6 +143,16 @@ export class Crawler{
                         }
                         console.log("-------- url sets end --------------")
                         
+                        // use axios all to speed up - TODO
+                        /* if(urlSets && Array.isArray(urlSets)){
+                            axios.all(urlSets.slice(0, linkLimit).map((urlSet: any) => axios.get(urlSet.loc))).then(
+                                (data: any) => {
+                                    console.log(data.ma);
+                                },
+                                );
+                                return;
+                            } */
+
                         for(let i = 0; i < urlSets.length; i++){
                             let urlLocation = urlSets[i].loc;
 
@@ -132,24 +164,64 @@ export class Crawler{
                                 try{
                                     let urlRes = await page.goto(urlLocation, {});
                                     this.results[urlLocation] = urlRes.status();
+                                    this.addToResult(urlRes.status, {
+                                        link: urlLocation,
+                                        snapshotLocation: null,
+                                        pageLoadTime: 0
+                                    });
+
                                 }catch(error:any){
-                                    this.results[urlLocation] = error.response.status;
+                                    if(error.response){
+                                        this.results[urlLocation] = error.response.status;
+                                        let ssPath = `images/${this.requestId}`;
+                                        if(!fs.existsSync(ssPath)){
+                                            fs.mkdirSync(ssPath);
+                                        }
+                                        ssPath = `${ssPath}/${this.linkCount}.png`;
+                                        console.log("Saving SS at " + ssPath);
+                                        await page.goto(urlLocation, {
+                                            waitUntil: 'networkidle2'
+                                        });
+                                      //  await page.waitForTimeout(500);
+                                        await page.screenshot({ path: ssPath , fullPage: true });
+                                        this.addToResult(error.response.status, {
+                                            link: urlLocation,
+                                            snapshotLocation: ssPath,
+                                            pageLoadTime: 0
+                                        });
+                                    }else{
+                                        console.error(error);
+                                    }
                                 }
                             }else if(this.type == "http"){
                                 try{
                                     let urlRes = await axios.get(urlLocation);
                                     this.results[urlLocation] = urlRes.status;
-                                    if(this.linkCount == 2){
-                                        console.log("Saving SS");
-                                        await page.goto(urlLocation, {
-                                            waitUntil: 'networkidle2'
-                                        });
-                                        await page.waitForTimeout(500);
-                                        await page.screenshot({ path: `images/${this.linkCount}.png`, fullPage: true });
-                                    }
+                                    this.addToResult(urlRes.status, {
+                                        link: urlLocation,
+                                        snapshotLocation: null,
+                                        pageLoadTime: 0
+                                    });
+                                    
                                 }catch(error:any){
                                     if(error.response){
                                         this.results[urlLocation] = error.response.status;
+                                        let ssPath = `images/${this.requestId}`;
+                                        if(!fs.existsSync(ssPath)){
+                                            fs.mkdirSync(ssPath);
+                                        }
+                                        ssPath = `${ssPath}/${this.linkCount}.png`;
+                                        console.log("Saving SS at " + ssPath);
+                                        await page.goto(urlLocation, {
+                                            waitUntil: 'networkidle2'
+                                        });
+                                       // await page.waitForTimeout(500);
+                                        await page.screenshot({ path: ssPath , fullPage: true });
+                                        this.addToResult(error.response.status, {
+                                            link: urlLocation,
+                                            snapshotLocation: ssPath,
+                                            pageLoadTime: 0
+                                        });
                                     }else{
                                         console.error(error);
                                     }

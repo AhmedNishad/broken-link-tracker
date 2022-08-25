@@ -1,3 +1,4 @@
+import { SiteResult } from "./crawler/crawler";
 
 const amqplib = require('amqplib');
 
@@ -20,10 +21,12 @@ export interface QueueMessage{
     type: string;
     error: string;
     _id: string;
+    siteResults: SiteResult[];
 }
 
 async function handleMessage(msg: QueueMessage){
     let results = {};
+    let siteResults: SiteResult[] = [];
     let linkCount = 0;
     if(msg.type == 'page'){
         let crawler = new Crawler(msg.baseUrl, msg.requestId);
@@ -35,6 +38,7 @@ async function handleMessage(msg: QueueMessage){
         await crawler.crawl();
         results = crawler.results;
         linkCount = crawler.linkCount;
+        siteResults = crawler.crawlResults;
     }
 
     // create PDF document with the snapshots of error pages
@@ -45,7 +49,8 @@ async function handleMessage(msg: QueueMessage){
     let model = await AnalysisRequestModel.findById(msg._id);
     if(model){
         model.handled = true;
-        model.results = JSON.stringify(results);
+       // model.results = JSON.stringify(results);
+        model.results = JSON.stringify(siteResults);
         model.completedTimeStamp = new Date();
         model.linkCount = linkCount;
         await model.save();

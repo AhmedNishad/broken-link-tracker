@@ -12,8 +12,14 @@ const queueConsumer = require('./queueConsumer');
 
 const {AnalysisRequestModel} = require("./db");
 
+const path = require('path');
+
 var MAX_PROCESS_COUNT = process.env.MAX_PROCESS_COUNT || 2;
 
+fastify.register(require('@fastify/static'), {
+  root: path.join(__dirname, '../images'),
+  prefix: '/images/', // optional: default '/'
+})
 
 // crawl expects a URL that will be analuzed through the sitemap
 fastify.get('/crawl', async (request: any, reply: any) => {
@@ -81,3 +87,4 @@ const start = async () => {
   }
 }
 start()
+
