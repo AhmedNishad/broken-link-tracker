@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+:root {
+    --primary: #D61D70;
+    --gray: #E3E6EC;
+    --text: #333333;
+}
+
+*{
+    font-family: 'Poppins', sans-serif;
+}
+
+body{
+    background: rgba(238, 238, 238, 0.503);
+}
+
+.container{
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.branding, .details-form{
+    z-index: 1;
+    flex-basis: 45%;
+}
+
+.details-form .card{
+    margin: auto;
+}
+
+.card{
+    max-width: 30vw;
+    box-shadow: 1px 4px 10px 3px #E85798;
+    border-radius: 10px;
+}
+
+.card h1{
+    font-size: 40px;
+}
+
+.branding-heading{
+    font-size: 36px;
+    line-height: 54px;
+    letter-spacing: 0em;
+    text-align: left;
+    background: white;
+    padding: 1rem;
+    font-weight: bold;
+}
+
+.guidelines{
+    background: white;
+    padding: 1rem;
+}
+
+
+.form-control{
+    width: 80%;
+    margin: 2rem auto;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.form-control label{
+    flex-basis: 100%;
+    text-align: left;
+    font-weight: bold;
+}
+
+.form-control input, .form-control button{
+    flex-basis: 100%;
+}
+
+.form-control input{
+    background: var(--gray);
+    height: 2rem;
+    width: 2rem;
+    border-radius: 8px;
+    border: 0;
+    border-bottom: 3px solid var(--primary);
+}
+
+.button{
+    background-color: var(--primary);
+    color: #FFF;
+}
+
+.bg{
+    min-height: 20vh;
+    position: fixed;
+    bottom: 1px;
+    left: 1px;
+    z-index: 0;
+    width: 100%;
+}
+
+.bg img{
+    width: 100%;
+}
+
+@media only screen and (max-width: 950px) {
+    .branding, .details-form{
+        flex-basis: 100%;
+    }
+    .card{
+        max-width: 60vw;
+    }
+}
+
+/*
+body{
+    background-image: url('../../images/back-main-2x.jpeg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}*/

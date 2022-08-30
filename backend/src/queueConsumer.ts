@@ -6,6 +6,8 @@ var amqp_url = process.env.CLOUDAMQP_URL || 'amqp://localhost:5672';
 
 const Crawler = require('./crawler/crawler');
 
+const Mailer = require('./email');
+
 const {AnalysisRequestModel} = require("./db");
 
 // todo - remove interface duplication
@@ -24,9 +26,13 @@ export interface QueueMessage{
     siteResults: SiteResult[];
 }
 
+export interface CrawlResult{
+    results: SiteResult[] | null | undefined;
+}
+
 async function handleMessage(msg: QueueMessage){
-    let results = {};
-    let siteResults: SiteResult[] = [];
+    let results: any = {};
+    let siteResults: CrawlResult = { results: null };
     let linkCount = 0;
     if(msg.type == 'page'){
         let crawler = new Crawler(msg.baseUrl, msg.requestId);
@@ -36,12 +42,13 @@ async function handleMessage(msg: QueueMessage){
         let crawler = new Crawler(msg.baseUrl, msg.requestId);
         await crawler.getSitemap();
         await crawler.crawl();
-        results = crawler.results;
+        results.results = crawler.results;
         linkCount = crawler.linkCount;
-        siteResults = crawler.crawlResults;
+        siteResults.results = crawler.crawlResults;
     }
 
     // mail the report
+    await Mailer.sendMail(msg.requestId, msg.email);
 
     let model = await AnalysisRequestModel.findById(msg._id);
     if(model){
