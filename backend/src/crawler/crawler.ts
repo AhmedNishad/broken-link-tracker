@@ -4,7 +4,7 @@ const { XMLParser} = require("fast-xml-parser");
 
 const { searchGoogle } = require('./sitemap');
 const fs = require('fs');
-const linkLimit = parseInt(process.env.linkLimit || "") || 5;
+const linkLimit = parseInt(process.env.linkLimit || "") || 100;
 
 export interface SiteResult{
     statusCode: string;
@@ -115,6 +115,7 @@ export class Crawler{
 
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
+        await page.setDefaultNavigationTimeout(0);
         console.log("Crawling page at " +  this.siteMapUrl);
         try{
             if(this.siteMapUrl == ""){

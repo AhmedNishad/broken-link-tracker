@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 
 import background from "./images/back-main-2x.jpeg";
+import Results from './components/Results/Results'
 
 function App() {
 
@@ -20,6 +21,7 @@ function App() {
           <Routes>
               <Route path="/" element={<Main />}> </Route>
               <Route path="loading" element={<Loader />}></Route>
+              <Route path="results" element={<Results />}></Route>
           </Routes>
         </BrowserRouter>
       </div>
