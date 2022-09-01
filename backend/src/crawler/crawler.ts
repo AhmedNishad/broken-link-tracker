@@ -4,7 +4,7 @@ const { XMLParser} = require("fast-xml-parser");
 
 const { searchGoogle } = require('./sitemap');
 const fs = require('fs');
-const linkLimit = parseInt(process.env.linkLimit || "") || 100;
+const linkLimit = parseInt(process.env.linkLimit || "") || 5;
 
 export interface SiteResult{
     statusCode: string;

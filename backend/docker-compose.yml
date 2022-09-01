@@ -1,0 +1,33 @@
+version: 3
+services:
+  backend:
+    image: purrlinq-backend
+    ports:
+      - "5000:5000"
+    networks:
+      - purrlinq-app
+    depends_on:
+      - mongo
+      - rabbitMq
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - purrlinq-app
+    volumes:
+      - mongo-data:/data/db
+  rabbitMq:
+    image: rabbitmq
+    ports:
+      - "5672:5672"
+    networks:
+      - purrlinq-app
+    volumes:
+      - mongo-data:/data/db
+networks:
+  purrlinq-app:
+    driver: bridge
+volumes:
+  mongo-data:
+    driver: local

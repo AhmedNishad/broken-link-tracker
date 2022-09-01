@@ -10,7 +10,7 @@ function Main() {
   return (
     <div className="container" >
     <div className="branding">
-      <h1 className='branding-heading'>Wanna Make Sure All THE Links On Your Site Are A-Ok?We got Mew!</h1>
+      <h1 className='branding-heading'>Wanna Make Sure All THE Links On Your Site Are A-Ok? We got Mew!</h1>
     </div>
     <div className='details-form'>
         <div className=" card">

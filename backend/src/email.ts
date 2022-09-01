@@ -7,11 +7,12 @@ const baseURL = process.env.BASE_APP_URL || `localhost:3000`;
 async function sendMail(requestId: string, toAddress: string) {
   // create reusable transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
-    host: "smtp.mailtrap.io",
-    port: 2525,
+    host: "smtp.hostinger.com",
+    port: 465,
+    secure: true,
     auth: {
-        user: "15dcb0e2063157",
-        pass: "b65d271f1b5e4d"
+        user: 'nishad@onepercentdev.com',
+        pass: "***REMOVED***"
     }
   });
 
@@ -19,7 +20,7 @@ async function sendMail(requestId: string, toAddress: string) {
 
   // send mail with defined transport object
   let info = await transporter.sendMail({
-    from: '"Fred Foo 👻" <foo@example.com>', // sender address
+    from: 'nishad@onepercentdev.com', // sender address
     to: toAddress, 
     subject: "Completed Broken Link Analysis",
     text: "Mew has crawled through all your links", 
@@ -32,8 +33,37 @@ async function sendMail(requestId: string, toAddress: string) {
 
 }
 
+const sendGridKey = process.env.SENDGRID_API_KEY || `***REMOVED***`;
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(sendGridKey)
+
+async function sendMailSendgrid(requestId: string, toAddress: string){
+  const msg = {
+    to: toAddress, // Change to your recipient
+    from: 'purrlinq@mail.com', // Change to your verified sender
+    subject: 'Sending with SendGrid is Fun',
+    text: 'and easy to do anywhere, even with Node.js',
+    html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+  }
+  
+  console.log(msg);
+  sgMail.send(msg).then((response: any) => {
+    console.log(response[0].statusCode)
+    console.log('Email sent')
+  })
+  .catch((error: any) => {
+    console.error(error)
+  })
+
+  /* try{
+    await sgMail.send(msg);
+  }catch(e){
+    console.error(e)
+  } */
+}
+
 module.exports = {
-    sendMail
+    sendMail: sendMail
 }
 
 export {}

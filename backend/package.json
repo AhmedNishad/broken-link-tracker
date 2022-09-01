@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@fastify/static": "^6.5.0",
+    "@sendgrid/mail": "^7.7.0",
     "@types/puppeteer": "^5.4.6",
     "@types/puppeteer-core": "^5.4.0",
     "amqplib": "^0.10.2",
