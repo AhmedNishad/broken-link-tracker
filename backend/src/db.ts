@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 
 main().catch(err => console.log(err));
 
+const mongoConnectionString = process.env.MONGO_CONNECTION_STRING || 'mongodb://localhost:27017/brokenlink'
+
 async function main() {
-  await mongoose.connect('mongodb://localhost:27017/brokenlink');
+  await mongoose.connect(mongoConnectionString);
 }
 
 const analysisRequestSchema = new mongoose.Schema({

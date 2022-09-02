@@ -1,14 +1,16 @@
-version: 3
+version: '3'
 services:
   backend:
-    image: purrlinq-backend
+    image: nishi787/purrlinq-backend
     ports:
-      - "5000:5000"
+      - "3000:3000"
     networks:
       - purrlinq-app
     depends_on:
       - mongo
       - rabbitMq
+    environment:
+      CLOUDAMQP_URL: amqp://guest:guest@rabbitmq:5672
   mongo:
     image: mongo
     ports:

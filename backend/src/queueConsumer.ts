@@ -34,7 +34,7 @@ async function handleMessage(msg: QueueMessage){
     let results: any = {};
     let siteResults: CrawlResult = { results: null };
     let linkCount = 0;
-    if(msg.type == 'page'){
+    if(msg.type == 'page'){ // Unused
         let crawler = new Crawler(msg.baseUrl, msg.requestId);
         await crawler.getSitemap();
         await crawler.crawl();
@@ -72,9 +72,15 @@ async function do_consume() {
         ch.consume(q, async function (msg: any) {
             let obj = JSON.parse(msg.content.toString());
             console.log("Message received " + obj.requestId);
-            await handleMessage(obj);
-            await ch.ack(msg);
-            console.log("Acknowledged Message " + obj.requestId)
+            try{
+                await handleMessage(obj);
+            }catch(err){
+                console.log("Error occured while handling request: " + obj.requestId)
+                console.error(err);
+            }finally{
+                await ch.ack(msg);
+                console.log("Acknowledged Message " + obj.requestId)
+            }
         });
     }catch(e){
         console.error(e);

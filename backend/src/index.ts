@@ -66,7 +66,6 @@ fastify.get('/results', async (request: any, reply: any) => {
       return {message: "Message is still being handled"}
     }
   }
-  return await crawlSitemap(request.query.url);
 })
 
 // listens for queue events
