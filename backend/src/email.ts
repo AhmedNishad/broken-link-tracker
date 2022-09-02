@@ -33,7 +33,7 @@ async function sendMail(requestId: string, toAddress: string) {
 
 }
 
-const sendGridKey = process.env.SENDGRID_API_KEY || `***REMOVED***`;
+const sendGridKey = process.env.SENDGRID_API_KEY;
 const sgMail = require('@sendgrid/mail')
 sgMail.setApiKey(sendGridKey)
 
