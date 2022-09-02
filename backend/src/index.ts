@@ -1,18 +1,15 @@
+// injecting env from config
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 
-// Require the framework and instantiate it
 const fastify = require('fastify')({ logger: true })
 
 const {crawlSitemap, parseSiteMap}  = require('./crawler/sitemap');
-
-const redis = require('redis');
-const client = redis.createClient();
 
 const publishToQueue = require('./queuePublisher');
 const queueConsumer = require('./queueConsumer');
 
 const {AnalysisRequestModel} = require("./db");
-
-const path = require('path');
 
 var MAX_PROCESS_COUNT = process.env.MAX_PROCESS_COUNT || 2;
 
@@ -63,7 +60,6 @@ fastify.get('/results', async (request: any, reply: any) => {
     if(analysisRequest.handled && analysisRequest.results){
       let {completedTimeStamp, insertedTimeStamp} = analysisRequest;
       let timeToComplete = completedTimeStamp.getTime() - insertedTimeStamp.getTime();
-      console.log(timeToComplete);
       analysisRequest.timeToComplete = timeToComplete;
       return analysisRequest;
     }else{
@@ -77,10 +73,11 @@ fastify.get('/results', async (request: any, reply: any) => {
 queueConsumer().then(() => {
 })
 
-// spins up fastify server
+const port = process.env.PORT || 3000;
+
 const start = async () => {
   try {
-    await fastify.listen({ port: 3000 })
+    await fastify.listen({ port: port })
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
