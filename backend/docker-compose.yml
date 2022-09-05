@@ -1,9 +1,9 @@
 version: '3'
 services:
   backend:
-    image: nishi787/purrlinq-backend
+    build: ./
     ports:
-      - "3000:3000"
+      - 3000:3000
     networks:
       - purrlinq-app
     depends_on:
@@ -11,18 +11,23 @@ services:
       - rabbitMq
     environment:
       CLOUDAMQP_URL: amqp://guest:guest@rabbitmq:5672
+      MONGO_CONNECTION_STRING: mongodb://mongo:27017/brokenlink
+    command: sh -c '/bin/wait-for-it.sh rabbitmq:5672 --timeout=30 -- npm run start:dev'
+    volumes:
+      - .:/code
   mongo:
     image: mongo
     ports:
-      - "27017:27017"
+      - 27017:27017
     networks:
       - purrlinq-app
     volumes:
       - mongo-data:/data/db
   rabbitMq:
-    image: rabbitmq
+    image: rabbitmq:3.8-management-alpine
     ports:
-      - "5672:5672"
+      - 5673:5672
+      - 15673:15672
     networks:
       - purrlinq-app
     volumes:

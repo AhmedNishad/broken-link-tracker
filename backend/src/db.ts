@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 
+const mongoConnectionString = process.env.MONGO_CONNECTION_STRING || 'mongodb://localhost:27017/brokenlink'
+
+// change made to the code now?
 main().catch(err => console.log(err));
 
-const mongoConnectionString = process.env.MONGO_CONNECTION_STRING || 'mongodb://localhost:27017/brokenlink'
 
 async function main() {
   await mongoose.connect(mongoConnectionString);

@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "clean": "rm -rf build tsconfig.tsbuildinfo",
-    "build": "tsc --incremental",
     "start": "node server.js",
     "start:dev": "nodemon",
+    "build": "tsc && node build/index.js",
     "dev": "nodemon",
     "start:queue": "nodemon",
     "test": "jest"

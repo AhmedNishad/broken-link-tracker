@@ -51,6 +51,11 @@ fastify.get('/crawl', async (request: any, reply: any) => {
   return {requestId: requestId};
 })
 
+fastify.get('/hello', async (request: any, reply: any) => {
+  console.log("Request received!");
+  return {message: "hello world"};
+})
+
 fastify.get('/results', async (request: any, reply: any) => {
   let {id} = request.query;
   let analysisRequests = await AnalysisRequestModel.find({requestId: id});
@@ -65,10 +70,12 @@ fastify.get('/results', async (request: any, reply: any) => {
     }else{
       return {message: "Message is still being handled"}
     }
+  }else{
+    return {message: "This request is not found"}
   }
 })
 
-// listens for queue events
+// listens for queue events does. it respond tho
 queueConsumer().then(() => {
 })
 
@@ -76,11 +83,14 @@ const port = process.env.PORT || 3000;
 
 const start = async () => {
   try {
-    await fastify.listen({ port: port })
+    await fastify.listen({ port: port, host: "0.0.0.0" }); // TODO - Figure out what this is in PROD
+    console.log("Listening on port " + port);
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)
   }
 }
-start()
+start().then(() => {
+
+})
 
