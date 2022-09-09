@@ -106,6 +106,7 @@ export class Crawler{
           return config
         })
         
+        // requeust duration logic
         instance.interceptors.response.use((response: any) => {
           const currentTime = new Date().getTime()      
           const startTime = response.config.headers['request-startTime']      
@@ -203,14 +204,14 @@ export class Crawler{
                                         if(!fs.existsSync(ssPath)){
                                             fs.mkdirSync(ssPath, { recursive: true });
                                         }
-                                        ssPath = `${ssPath}/${this.linkCount}.png`;
+                                        /* ssPath = `${ssPath}/${this.linkCount}.png`;
                                         console.log("Saving SS at " + ssPath);
                                         await page.goto(urlLocation, {
                                           //  waitUntil: 'load' //'networkidle2'
                                         });
                                         console.log("Loaded Page " + urlLocation);
                                         await page.screenshot({ path: ssPath , fullPage: true });
-                                        console.log("Saved SS");
+                                        console.log("Saved SS"); */
                                         this.addToResult(error.response.status, {
                                             link: urlLocation,
                                             snapshotLocation: ssPath,
@@ -238,7 +239,7 @@ export class Crawler{
                                             fs.mkdirSync(ssPath, { recursive: true });
                                         }
                                         ssPath = `${ssPath}/${this.linkCount}.png`;
-                                        console.log("Saving SS at " + ssPath);
+                                        /* console.log("Saving SS at " + ssPath);
                                         console.time();
                                         await page.goto(urlLocation, {
                                             //waitUntil: 'load' //'networkidle2'
@@ -246,7 +247,7 @@ export class Crawler{
                                         console.log("Loaded Page " + urlLocation);
                                         console.timeEnd();
                                         await page.screenshot({ path: ssPath , fullPage: true });
-                                        console.log("Saved SS");
+                                        console.log("Saved SS"); */
                                         this.addToResult(error.response.status, {
                                             link: urlLocation,
                                             snapshotLocation: ssPath,
