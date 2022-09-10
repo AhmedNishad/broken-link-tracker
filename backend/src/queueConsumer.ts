@@ -30,6 +30,41 @@ export interface CrawlResult{
     results: SiteResult[] | null | undefined;
 }
 
+function getEmailHTMLContent(results:  SiteResult[], resultId: string){
+    // load html template
+
+    // generate stats
+    let okLinks = results.filter((r: SiteResult) => r.statusCode.startsWith("2"))
+        .map(r => r.links.length)
+        .reduce((a: number, b: number) => {
+        return a + b
+        });
+    let brokenLinks = results.filter((r: SiteResult) => r.statusCode.startsWith("4") || r.statusCode.startsWith("5"))
+        .map(r => r.links.length)
+        .reduce((a: number, b: number) => {
+            return a + b
+        });
+    let redirectLinks = results.filter((r: SiteResult) => r.statusCode.startsWith("3"))
+        .map(r => r.links.length)
+        .reduce((a: number, b: number) => {
+        return a + b
+        });
+
+    let totalPageLoadTime = 0;
+    let totalPageCount = 0;
+    for(let i = 0; i < results.length; i++){
+        let result = results[i];
+        result.links.forEach((l => {
+            if(l.pageLoadTime){
+                totalPageLoadTime += l.pageLoadTime;
+                totalPageCount++;
+            }
+        }));
+    }
+
+    // replace content from template
+}
+
 async function handleMessage(msg: QueueMessage){
     let results: any = {};
     let siteResults: CrawlResult = { results: null };
@@ -48,6 +83,7 @@ async function handleMessage(msg: QueueMessage){
     }
 
     // mail the report
+    let content = getEmailHTMLContent(results, msg.requestId);
     await Mailer.sendMail(msg.requestId, msg.email);
 
     let model = await AnalysisRequestModel.findById(msg._id);
