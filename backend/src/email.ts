@@ -1,10 +1,9 @@
 
 const nodemailer = require("nodemailer");
 
-const baseURL = process.env.BASE_APP_URL || `localhost:3000`;
 
 // async..await is not allowed in global scope, must use a wrapper
-async function sendMail(requestId: string, toAddress: string) {
+async function sendMail(requestId: string, toAddress: string, htmlContent: string) {
   // create reusable transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
     host: "smtp.hostinger.com",
@@ -15,18 +14,13 @@ async function sendMail(requestId: string, toAddress: string) {
         pass: process.env.EMAIL_PASSWORD
     }
   });
-
-  let url = `${baseURL}/results?id=${requestId}`
-
+  console.log(htmlContent);
   // send mail with defined transport object
   let info = await transporter.sendMail({
     from: 'nishad@onepercentdev.com', // sender address
     to: toAddress, 
     subject: "Completed Broken Link Analysis",
-    text: "Mew has crawled through all your links", 
-    html: `<b>Hi, Mew Has Finally Finished Crawling All Your Broken Links!</b>
-            <p>You can find them </p>
-            <a href='${url}' >here ;)</a>`, 
+    html: htmlContent, 
   });
 
   console.log("Message sent: %s", info.messageId);

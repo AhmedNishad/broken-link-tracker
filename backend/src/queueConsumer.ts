@@ -10,6 +10,8 @@ const Mailer = require('./email');
 
 const {AnalysisRequestModel} = require("./db");
 
+const fs = require('fs').promises;
+const path = require("path");
 // todo - remove interface duplication
 export interface QueueMessage{
     email: string;
@@ -30,25 +32,43 @@ export interface CrawlResult{
     results: SiteResult[] | null | undefined;
 }
 
-function getEmailHTMLContent(results:  SiteResult[], resultId: string){
+const baseURL = process.env.BASE_APP_URL || `localhost:3000`;
+
+async function getEmailHTMLContent(results:  SiteResult[], requestId: string, siteUrl: string) : Promise<string>{
+    console.log(results);
     // load html template
+    let templatePath = path.join(__dirname, "email-template.html")
+    const data = await fs.readFile(templatePath, "binary");
+    let buffer = Buffer.from(data);
+    let htmlContent = buffer.toString();
 
     // generate stats
-    let okLinks = results.filter((r: SiteResult) => r.statusCode.startsWith("2"))
+    let okLinks = results.filter((r: SiteResult) => r.statusCode && r.statusCode.toString().startsWith("2"))
         .map(r => r.links.length)
-        .reduce((a: number, b: number) => {
-        return a + b
-        });
-    let brokenLinks = results.filter((r: SiteResult) => r.statusCode.startsWith("4") || r.statusCode.startsWith("5"))
+    let okLinksCount = 0;
+    if(okLinks.length > 0){
+        okLinksCount = okLinks.reduce((a: number, b: number) => {
+            return a + b
+            });
+    }    
+    let brokenLinks = results.filter((r: SiteResult) => r.statusCode && r.statusCode.toString().startsWith("4") || r.statusCode.toString().startsWith("5"))
         .map(r => r.links.length)
-        .reduce((a: number, b: number) => {
+        
+    let brokenLinksCount = 0;
+    if(brokenLinks.length > 0){
+        brokenLinksCount = brokenLinks.reduce((a: number, b: number) => {
             return a + b
         });
-    let redirectLinks = results.filter((r: SiteResult) => r.statusCode.startsWith("3"))
-        .map(r => r.links.length)
-        .reduce((a: number, b: number) => {
-        return a + b
-        });
+    }    
+    let redirectLinks = results.filter((r: SiteResult) => r.statusCode && r.statusCode.toString().startsWith("3"))
+        .map(r => r.links.length);
+
+    let redirectLinksCount = 0;
+    if(redirectLinks.length > 0){
+        redirectLinksCount = redirectLinks.reduce((a: number, b: number) => {
+            return a + b
+            });
+    }    
 
     let totalPageLoadTime = 0;
     let totalPageCount = 0;
@@ -63,7 +83,18 @@ function getEmailHTMLContent(results:  SiteResult[], resultId: string){
     }
 
     // replace content from template
+    htmlContent = htmlContent.replace("{{URL}}", siteUrl);
+    htmlContent = htmlContent.replace("{{OK}}", okLinks.toString());
+    htmlContent = htmlContent.replace("{{Broken}}", brokenLinks.toString());
+    htmlContent = htmlContent.replace("{{Other}}", redirectLinks.toString());
+    htmlContent = htmlContent.replace("{{Avg}}", parseFloat(`${totalPageLoadTime/totalPageCount}`).toString());
+    htmlContent = htmlContent.replace("{{Link}}", `${baseURL}/results?id=${requestId}`);
+    return htmlContent;
 }
+/* 
+getEmailHTMLContent([{statusCode: "200", links: [{pageLoadTime: 500, link: "http:localhost.com", snapshotLocation: null}]}], "", "").then(() => {
+    console.log("Sent");
+}) */
 
 async function handleMessage(msg: QueueMessage){
     let results: any = {};
@@ -83,8 +114,8 @@ async function handleMessage(msg: QueueMessage){
     }
 
     // mail the report
-    let content = getEmailHTMLContent(results, msg.requestId);
-    await Mailer.sendMail(msg.requestId, msg.email);
+    let content = await getEmailHTMLContent(siteResults.results != null ?  siteResults.results : [], msg.requestId, msg.baseUrl);
+    await Mailer.sendMail(msg.requestId, msg.email, content);
 
     let model = await AnalysisRequestModel.findById(msg._id);
     if(model){
@@ -96,6 +127,8 @@ async function handleMessage(msg: QueueMessage){
         await model.save();
     }
 }
+
+
 
 async function do_consume() {
     console.log("QUEUE: Listening for messages");

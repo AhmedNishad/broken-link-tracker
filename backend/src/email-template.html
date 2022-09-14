@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Email Template</title>
+</head>
+<body>
+    <style>
+        body{
+            font-family: 'Poppins', sans-serif;
+        }
+        p{
+            font-size: 22px;
+        }
+        #pic{
+            position: absolute;
+            bottom: 228px;
+            right: 0px;
+        }
+        @media only screen and (max-width: 780px) {
+            #pic{
+                bottom: 150px;
+            }
+        }
+    </style>
+    <div >
+        <div style="width: 80%; margin:auto; padding: 10px 2rem;"> 
+            <p style="margin-bottom: 0px;">Dear</p>
+            <h1 style="margin-top: 0px;">Hooman</h1>
+            <p>Here is the broken link report as I promised. <br> Can I paw-lease get a treat!!!</p>
+        </div>
+        <div  style="background: #E857981A; width: 80%; margin:auto; padding: 10px 2rem; position: relative;">
+            <img id="pic" src="https://images2.imgbox.com/80/f1/7mxV1sAX_o.png" />
+            <div>
+                <h4>URL</h4>
+                <p>{{URL}}</p>
+            </div>
+            <div>
+                <h4>Report Summary</h4>
+                <p>
+                    OK Links : {{OK}}<br>
+                    Broken Links : {{Broken}}<br>
+                    Redirect & Other Links : {{Other}}<br>
+                    Average Page Load Time : {{Avg}}ms</p>  
+            </div>
+            <div>
+                <a style="background: #E85798; border-radius: 30px; 
+                text-decoration: none; color: white; padding: 10px 20px;
+                margin:auto; display: block; width: 350px; text-align: center;" href="{{Link}}" >Go to Report Link</a>
+            </div>
+        </div>
+    </div>
+        </body>
+        </html>

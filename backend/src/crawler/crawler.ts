@@ -114,18 +114,7 @@ export class Crawler{
           return response
         })
 
-        const browser = await puppeteer.launch({
-            headless: true,
-            executablePath: '/usr/bin/google-chrome',
-            args: [
-                "--disable-gpu",
-                "--disable-dev-shm-usage",
-                "--disable-setuid-sandbox",
-                '--no-sandbox'
-            ]
-        });
-        const page = await browser.newPage();
-        await page.setDefaultNavigationTimeout(0);
+        
         console.log("Crawling page at " +  this.siteMapUrl);
         try{
             if(this.siteMapUrl == ""){
@@ -187,41 +176,7 @@ export class Crawler{
                             if(this.linkCount > linkLimit){
                                 return;
                             }
-                            if(this.type == "browser"){
-                                try{
-                                    let urlRes = await page.goto(urlLocation, {});
-                                    this.results[urlLocation] = urlRes.status();
-                                    this.addToResult(urlRes.status, {
-                                        link: urlLocation,
-                                        snapshotLocation: null,
-                                        pageLoadTime: 0
-                                    });
-
-                                }catch(error:any){
-                                    if(error.response){
-                                        this.results[urlLocation] = error.response.status;
-                                        let ssPath = `images/${this.requestId}`;
-                                        if(!fs.existsSync(ssPath)){
-                                            fs.mkdirSync(ssPath, { recursive: true });
-                                        }
-                                        /* ssPath = `${ssPath}/${this.linkCount}.png`;
-                                        console.log("Saving SS at " + ssPath);
-                                        await page.goto(urlLocation, {
-                                          //  waitUntil: 'load' //'networkidle2'
-                                        });
-                                        console.log("Loaded Page " + urlLocation);
-                                        await page.screenshot({ path: ssPath , fullPage: true });
-                                        console.log("Saved SS"); */
-                                        this.addToResult(error.response.status, {
-                                            link: urlLocation,
-                                            snapshotLocation: ssPath,
-                                            pageLoadTime: 0
-                                        });
-                                    }else{
-                                        console.error(error);
-                                    }
-                                }
-                            }else if(this.type == "http"){
+                            if(this.type == "http"){
                                 try{
                                     let urlRes = await instance.get(urlLocation);
                                     this.results[urlLocation] = urlRes.status;
@@ -269,15 +224,7 @@ export class Crawler{
                         if(this.linkCount > linkLimit){
                             return;
                         }
-                        if(this.type == "browser"){
-                            try{
-                                let urlRes = await page.goto(urlLocation, {});
-                                this.results[urlLocation] = urlRes.status();
-                                
-                            }catch(error:any){
-                                this.results[urlLocation] = error.response.status;
-                            }
-                        }else if(this.type == "http"){
+                        if(this.type == "http"){
                             try{
                                 let urlRes = await axios.get(urlLocation);
                                 this.results[urlLocation] = urlRes.status;
@@ -294,13 +241,13 @@ export class Crawler{
                                         fs.mkdirSync(ssPath, { recursive: true });
                                     }
                                     ssPath = `${ssPath}/${this.linkCount}.png`;
-                                    console.time();
+                                    /* console.time();
                                     console.log("Saving SS at " + ssPath);
                                     await page.goto(urlLocation, {
                                         waitUntil: 'networkidle2'
                                     });
                                     console.timeEnd();
-                                    await page.screenshot({ path: ssPath , fullPage: true });
+                                    await page.screenshot({ path: ssPath , fullPage: true }); */
                                     this.addToResult(error.response.status, {
                                         link: urlLocation,
                                         snapshotLocation: ssPath,
@@ -324,8 +271,6 @@ export class Crawler{
                 console.error(e);
             }
             this.results = {error: "Error occurred while crawling " + this.baseUrl}
-        }finally{
-            browser.close();
         }
     }
 }
