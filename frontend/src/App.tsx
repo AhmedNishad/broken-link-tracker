@@ -21,7 +21,9 @@ function App() {
           <Routes>
               <Route path="/" element={<Main />}> </Route>
               <Route path="loading" element={<Loader />}></Route>
-              <Route path="results" element={<Results />}></Route>
+              <Route path="results" >
+                <Route path=":requestId" element={<Results />}/>
+              </Route>
           </Routes>
         </BrowserRouter>
       </div>

@@ -32,7 +32,8 @@ export interface CrawlResult{
     results: SiteResult[] | null | undefined;
 }
 
-const baseURL = process.env.BASE_APP_URL || `localhost:3000`;
+const baseURL = process.env.BASE_APP_URL || `https://localhost:3000`;
+const clientURL = process.env.CLIENT_APP_URL || `http://127.0.0.1:5173`;
 
 async function getEmailHTMLContent(results:  SiteResult[], requestId: string, siteUrl: string) : Promise<string>{
     console.log(results);
@@ -88,7 +89,7 @@ async function getEmailHTMLContent(results:  SiteResult[], requestId: string, si
     htmlContent = htmlContent.replace("{{Broken}}", brokenLinks.toString());
     htmlContent = htmlContent.replace("{{Other}}", redirectLinks.toString());
     htmlContent = htmlContent.replace("{{Avg}}", parseFloat(`${totalPageLoadTime/totalPageCount}`).toString());
-    htmlContent = htmlContent.replace("{{Link}}", `${baseURL}/results?id=${requestId}`);
+    htmlContent = htmlContent.replace("{{Link}}", `${clientURL}/results/${requestId}`);
     return htmlContent;
 }
 /* 
@@ -97,34 +98,39 @@ getEmailHTMLContent([{statusCode: "200", links: [{pageLoadTime: 500, link: "http
 }) */
 
 async function handleMessage(msg: QueueMessage){
-    let results: any = {};
-    let siteResults: CrawlResult = { results: null };
-    let linkCount = 0;
-    if(msg.type == 'page'){ // Unused
-        let crawler = new Crawler(msg.baseUrl, msg.requestId);
-        await crawler.getSitemap();
-        await crawler.crawl();
-    }else if(msg.type == 'http'){
-        let crawler = new Crawler(msg.baseUrl, msg.requestId);
-        await crawler.getSitemap();
-        await crawler.crawl();
-        results.results = crawler.results;
-        linkCount = crawler.linkCount;
-        siteResults.results = crawler.crawlResults;
-    }
-
-    // mail the report
-    let content = await getEmailHTMLContent(siteResults.results != null ?  siteResults.results : [], msg.requestId, msg.baseUrl);
-    await Mailer.sendMail(msg.requestId, msg.email, content);
-
-    let model = await AnalysisRequestModel.findById(msg._id);
-    if(model){
-        model.handled = true;
-       // model.results = JSON.stringify(results);
-        model.results = JSON.stringify(siteResults);
-        model.completedTimeStamp = new Date();
-        model.linkCount = linkCount;
-        await model.save();
+    try{
+        let results: any = {};
+        let siteResults: CrawlResult = { results: null };
+        let linkCount = 0;
+        if(msg.type == 'page'){ // Unused
+            let crawler = new Crawler(msg.baseUrl, msg.requestId);
+            await crawler.getSitemap();
+            await crawler.crawl();
+        }else if(msg.type == 'http'){
+            let crawler = new Crawler(msg.baseUrl, msg.requestId);
+            await crawler.getSitemap();
+            await crawler.crawl();
+            results.results = crawler.results;
+            linkCount = crawler.linkCount;
+            siteResults.results = crawler.crawlResults;
+        }
+    
+        // mail the report
+        let content = await getEmailHTMLContent(siteResults.results != null ?  siteResults.results : [], msg.requestId, msg.baseUrl);
+        await Mailer.sendMail(msg.requestId, msg.email, content);
+    
+        let model = await AnalysisRequestModel.findById(msg._id);
+        if(model){
+            model.handled = true;
+           // model.results = JSON.stringify(results);
+            model.results = JSON.stringify(siteResults);
+            model.completedTimeStamp = new Date();
+            model.linkCount = linkCount;
+            await model.save();
+        }
+    }catch(_){
+        // send email for failed cases
+        await Mailer.sendMail(msg.requestId, msg.email, "Sorry! We were unable to crawl your site...");
     }
 }
 

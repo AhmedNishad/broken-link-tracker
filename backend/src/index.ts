@@ -4,6 +4,8 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 
 const fastify = require('fastify')({ logger: true })
 
+import cors from '@fastify/cors'
+
 const {crawlSitemap, parseSiteMap}  = require('./crawler/sitemap');
 
 const publishToQueue = require('./queuePublisher');
@@ -13,9 +15,16 @@ const {AnalysisRequestModel} = require("./db");
 
 var MAX_PROCESS_COUNT = process.env.MAX_PROCESS_COUNT || 2;
 
+const CLIENT_APP_URL = process.env.CLIENT_APP_URL || `http://127.0.0.1:5173`;
+
 fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, '../images'),
   prefix: '/images/', // optional: default '/'
+})
+
+fastify.register(cors, { 
+  // update to the right CORS from env
+  origin: CLIENT_APP_URL
 })
 
 // crawl expects a URL that will be analuzed through the sitemap
@@ -23,7 +32,7 @@ fastify.get('/crawl', async (request: any, reply: any) => {
   // check if there are already  MAX_PROCESS_COUNT messages
   let currentQueueCount = await AnalysisRequestModel.countDocuments({ handled:false });
   if(currentQueueCount > MAX_PROCESS_COUNT){
-    return {error: "Server overloaded, please try again later"}
+    return {message: "Server overloaded, please try again later"}
   }
 
   let requestId = (new Date()).getTime(); // make timestamp
