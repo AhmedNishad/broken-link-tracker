@@ -156,19 +156,7 @@ export class Crawler{
                         }
                         console.log("-------- url sets end --------------")
                         
-                        // use axios all to speed up - TODO
-                        /* if(urlSets && Array.isArray(urlSets)){
-                            axios.all(urlSets.slice(0, linkLimit).map((urlSet: any) => axios.get(urlSet.loc))).then(
-                                (data: any) => {
-                                    console.log(data.length);
-                                    for(let d of data){
-                                        console.log(`${d.config.url} - ${d.status} - ${d.headers['request-duration']}`);
-                                    }
-                                    this.linkCount += linkLimit;
-                            });
-                            return;
-                        }
-                        return; */
+                       
                         for(let i = 0; i < urlSets.length; i++){
                             let urlLocation = urlSets[i].loc;
 
@@ -194,15 +182,7 @@ export class Crawler{
                                             fs.mkdirSync(ssPath, { recursive: true });
                                         }
                                         ssPath = `${ssPath}/${this.linkCount}.png`;
-                                        /* console.log("Saving SS at " + ssPath);
-                                        console.time();
-                                        await page.goto(urlLocation, {
-                                            //waitUntil: 'load' //'networkidle2'
-                                        });
-                                        console.log("Loaded Page " + urlLocation);
-                                        console.timeEnd();
-                                        await page.screenshot({ path: ssPath , fullPage: true });
-                                        console.log("Saved SS"); */
+                                        
                                         this.addToResult(error.response.status, {
                                             link: urlLocation,
                                             snapshotLocation: ssPath,
@@ -241,13 +221,7 @@ export class Crawler{
                                         fs.mkdirSync(ssPath, { recursive: true });
                                     }
                                     ssPath = `${ssPath}/${this.linkCount}.png`;
-                                    /* console.time();
-                                    console.log("Saving SS at " + ssPath);
-                                    await page.goto(urlLocation, {
-                                        waitUntil: 'networkidle2'
-                                    });
-                                    console.timeEnd();
-                                    await page.screenshot({ path: ssPath , fullPage: true }); */
+                                   
                                     this.addToResult(error.response.status, {
                                         link: urlLocation,
                                         snapshotLocation: ssPath,

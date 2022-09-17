@@ -13,8 +13,7 @@ const queueConsumer = require('./queueConsumer');
 
 const {AnalysisRequestModel} = require("./db");
 
-var MAX_PROCESS_COUNT = process.env.MAX_PROCESS_COUNT || 2;
-
+const MAX_PROCESS_COUNT = process.env.MAX_PROCESS_COUNT || 2;
 const CLIENT_APP_URL = process.env.CLIENT_APP_URL || `http://127.0.0.1:5173`;
 
 fastify.register(require('@fastify/static'), {
@@ -84,10 +83,6 @@ fastify.get('/results', async (request: any, reply: any) => {
   }
 })
 
-// listens for queue events does. it respond tho
-queueConsumer().then(() => {
-})
-
 const port = process.env.PORT || 3000;
 
 const start = async () => {
@@ -98,8 +93,11 @@ const start = async () => {
     fastify.log.error(err)
     process.exit(1)
   }
-}
+} // Start web server
 start().then(() => {
 
 })
 
+// listens for queue events
+queueConsumer().then(() => {
+})

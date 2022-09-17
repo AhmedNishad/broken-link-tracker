@@ -122,7 +122,6 @@ async function handleMessage(msg: QueueMessage){
         let model = await AnalysisRequestModel.findById(msg._id);
         if(model){
             model.handled = true;
-           // model.results = JSON.stringify(results);
             model.results = JSON.stringify(siteResults);
             model.completedTimeStamp = new Date();
             model.linkCount = linkCount;
