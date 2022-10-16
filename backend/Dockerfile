@@ -15,7 +15,7 @@ COPY package*.json ./
 RUN wget -O /bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
 RUN chmod +x /bin/wait-for-it.sh
 
-RUN npm install -g nodemon puppeteer && npm install
+RUN npm install
 # If you are building your code for production
 # RUN npm ci --only=production
 

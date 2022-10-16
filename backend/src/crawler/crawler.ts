@@ -1,5 +1,4 @@
 const axios = require('axios'); 
-const puppeteer = require('puppeteer');
 const { XMLParser} = require("fast-xml-parser");
 
 const { searchGoogle } = require('./sitemap');

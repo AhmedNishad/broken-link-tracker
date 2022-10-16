@@ -21,9 +21,10 @@ fastify.register(require('@fastify/static'), {
   prefix: '/images/', // optional: default '/'
 })
 
+console.log(CLIENT_APP_URL.split(','));
 fastify.register(cors, { 
   // update to the right CORS from env
-  origin: CLIENT_APP_URL
+  origin: CLIENT_APP_URL.split(',')
 })
 
 // crawl expects a URL that will be analuzed through the sitemap
@@ -83,6 +84,10 @@ fastify.get('/results', async (request: any, reply: any) => {
   }
 })
 
+// listens for queue events
+queueConsumer().then(() => {
+})
+
 const port = process.env.PORT || 3000;
 
 const start = async () => {
@@ -98,6 +103,3 @@ start().then(() => {
 
 })
 
-// listens for queue events
-queueConsumer().then(() => {
-})

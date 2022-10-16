@@ -3,7 +3,7 @@ import './Main.css'
 
 import { Link, useNavigate  } from "react-router-dom";
 
-import background from "../../images/back-main-2x.jpeg";
+import background from "../../images/back-main-4x.png";
 import { useState } from 'react';
 
 import configData from "../../appConfig.prod.json";

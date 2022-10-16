@@ -12,11 +12,12 @@ services:
     environment:
       CLOUDAMQP_URL: amqp://guest:guest@rabbitmq:5672
       MONGO_CONNECTION_STRING: mongodb://mongo:27017/brokenlink
-      CLIENT_APP_URL: https://rainbow-pie-78bf5e.netlify.app
-      linkLimit: 100
+      CLIENT_APP_URL: https://purrlinq.nishadfowzan.com,https://rainbow-pie-78bf5e.netlify.app
+      linkLimit: 300
     command: sh -c '/bin/wait-for-it.sh rabbitmq:5672 --timeout=30 -- npm run build'
     volumes:
       - .:/code
+    restart: always
   mongo:
     image: mongo
     ports:

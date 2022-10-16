@@ -33,12 +33,13 @@ export interface CrawlResult{
 }
 
 const baseURL = process.env.BASE_APP_URL || `https://localhost:3000`;
-const clientURL = process.env.CLIENT_APP_URL || `http://127.0.0.1:5173`;
+let clientURL = process.env.CLIENT_APP_URL || `http://127.0.0.1:5173`;
 
 async function getEmailHTMLContent(results:  SiteResult[], requestId: string, siteUrl: string) : Promise<string>{
     console.log(results);
     // load html template
-    let templatePath = path.join(__dirname, "email-template.html")
+    let templatePath = path.join(__dirname, "public/email-template.html")
+    console.log(templatePath);
     const data = await fs.readFile(templatePath, "binary");
     let buffer = Buffer.from(data);
     let htmlContent = buffer.toString();
@@ -83,6 +84,7 @@ async function getEmailHTMLContent(results:  SiteResult[], requestId: string, si
         }));
     }
 
+    clientURL = clientURL.split(',')[0];
     // replace content from template
     htmlContent = htmlContent.replace("{{URL}}", siteUrl);
     htmlContent = htmlContent.replace("{{OK}}", okLinks.toString());
@@ -127,8 +129,16 @@ async function handleMessage(msg: QueueMessage){
             model.linkCount = linkCount;
             await model.save();
         }
-    }catch(_){
+    }catch(e: any){
+        console.error(e);
         // send email for failed cases
+        let model = await AnalysisRequestModel.findById(msg._id);
+        if(model){
+            model.handled = true;
+            model.results = JSON.stringify({error: e.message});
+            model.completedTimeStamp = new Date();
+            await model.save();
+        }
         await Mailer.sendMail(msg.requestId, msg.email, "Sorry! We were unable to crawl your site...");
     }
 }

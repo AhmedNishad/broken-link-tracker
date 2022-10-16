@@ -12,7 +12,11 @@
 }
 
 body{
-    background: rgba(238, 238, 238, 0.503);
+    background: #f7f7f7;
+}
+
+#root{
+    background: #f7f7f7;
 }
 
 .container{
