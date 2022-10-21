@@ -19,6 +19,7 @@ function Results() {
     let { requestId } = useParams();
     
     let [results, setResults] = useState<any[]>([]);
+    let [url, setURL] = useState("");
     let [page, setPage] = useState(0);
     let [pageSize, setPageSize] = useState(5);
 
@@ -30,6 +31,7 @@ function Results() {
             console.log(resultArr);
             if(resultArr.results){
                 let resultObj = JSON.parse(resultArr.results);
+                setURL(resultObj.baseUrl);
                 if(resultObj.results){
                     setResults(resultObj.results);
                 }
@@ -145,7 +147,7 @@ function Results() {
         <div id='table'>
             <div className='link-info'>
                 <h3>Purr Report</h3>
-                <h5>www.daraz.lk</h5>
+                <h5>{url}</h5>
             </div>
             <table>
                 <thead>
